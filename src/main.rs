@@ -1,95 +1,14 @@
-use std::{collections::HashMap, str::FromStr};
-use chrono::{DateTime,Utc};
-use serde::{Deserialize, Serialize};
+mod modules;
+
+use std::collections::HashMap;
+use std::str::FromStr;
+
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct User {
-    id: Uuid,
-    name: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct Message {
-    id: Uuid,
-    sender: Uuid,
-    timestamp: DateTime<Utc>,
-    body: String,
-}
-
-#[derive(Default)]
-struct Feed {
-    messages: Vec<Message>,
-}
-
-impl Feed {
-    pub fn push(&mut self, message: Message) {
-        let index = self.messages.partition_point(|x| x.timestamp < message.timestamp);
-
-        self.messages.insert(index, message);
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = &Message> {
-        self.messages.iter()
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct Join {
-    name: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct Post {
-    message: Message,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "type", content = "payload")]
-enum Input {
-    Join(Join),
-    Post(Post),
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "type", content = "payload")]
-enum Output {
-    Error(OutputErrors),
-    Alive,
-    CurrentState(CurrentState),
-    UserJoined(UserJoined),
-    UserLeft(UserLeft),
-    Posted(Posted),
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-enum OutputErrors {
-    Something,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct CurrentState {
-    myself: User,
-    users: Vec<User>,
-    messages: Vec<Message>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct UserJoined {
-    user: User,
-    timestamp: DateTime<Utc>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct UserLeft {
-    id: Uuid,
-    timestamp: DateTime<Utc>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct Posted {
-    message: Message,
-}
+use crate::modules::data::{Feed, Message, User};
+use crate::modules::input::{Input, Join, Post};
+use crate::modules::output::{Output, UserJoined};
 
 fn main() {
     let mut feed: Feed = Default::default();
