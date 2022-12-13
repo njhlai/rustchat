@@ -50,7 +50,8 @@ impl Hub {
     }
 
     fn process_joined(&self, client_id: Uuid, join: Join) {
-        match self.users.write().unwrap().entry(client_id) {
+        let mut users = self.users.write().unwrap();
+        match users.entry(client_id) {
             Entry::Occupied(_) => {
                 self.send_to_user(client_id, Output::Error(OutputErrors::UserAlreadyJoined));
             },
@@ -64,7 +65,7 @@ impl Hub {
                 // send feed to user
                 self.send_to_user(client_id, Output::CurrentState(CurrentState {
                     myself: user.clone(),
-                    users: self.users.read().unwrap().values().cloned().collect(),
+                    users: users.values().cloned().collect(),
                     messages: self.feed.read().unwrap().messages.clone(),
                 }));
 
