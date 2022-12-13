@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use super::data::Message;
-
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", content = "payload")]
 pub enum Input {
@@ -16,5 +14,5 @@ pub struct Join {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Post {
-    pub message: Message,
+    pub body: String,
 }
