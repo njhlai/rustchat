@@ -1,5 +1,5 @@
 use std::collections::{HashMap, hash_map::Entry};
-use std::sync::mpsc::{channel, Sender, Receiver};
+use std::sync::mpsc::{sync_channel, SyncSender, Receiver};
 use std::sync::RwLock;
 
 use chrono::Utc;
@@ -8,11 +8,12 @@ use uuid::Uuid;
 use super::data::{Feed, User, Message};
 use super::input::{Input, Join, Post};
 use super::output::{CurrentState, Output, OutputErrors, UserJoined, Posted};
+use super::server::ClientInput;
 
 pub struct Hub {
     pub feed: RwLock<Feed>,
     pub users: RwLock<HashMap<Uuid, User>>,
-    pub outpost: RwLock<HashMap<Uuid, Sender<Output>>>,
+    pub outpost: RwLock<HashMap<Uuid, SyncSender<Output>>>,
 }
 
 impl Hub {
@@ -22,6 +23,14 @@ impl Hub {
             users: Default::default(),
             outpost: Default::default(),
         }
+    }
+
+    pub fn run(&self, rx: Receiver<ClientInput>) {
+        for client_input in rx.iter() {
+            self.process(client_input.id, client_input.input);
+        }
+
+        println!("Hub shutting down");
     }
 
     pub fn send(&self, output: Output) {
@@ -43,7 +52,7 @@ impl Hub {
     }
 
     pub fn connect(&self, id: Uuid) -> Receiver<Output> {
-        let (tx, rx) = channel::<Output>();
+        let (tx, rx) = sync_channel::<Output>(32);
         let mut map = self.outpost.write().unwrap();
         map.insert(id, tx);
         rx
