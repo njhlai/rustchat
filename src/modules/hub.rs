@@ -3,6 +3,7 @@ use std::sync::mpsc::{sync_channel, SyncSender, Receiver};
 use std::sync::RwLock;
 
 use chrono::Utc;
+use tokio::sync::mpsc::UnboundedReceiver;
 use uuid::Uuid;
 
 use super::data::{Feed, User, Message};
@@ -25,8 +26,8 @@ impl Hub {
         }
     }
 
-    pub fn run(&self, rx: Receiver<ClientInput>) {
-        for client_input in rx.iter() {
+    pub fn run(&self, mut rx: UnboundedReceiver<ClientInput>) {
+        while let Some(client_input) = rx.blocking_recv() {
             self.process(client_input.id, client_input.input);
         }
 
