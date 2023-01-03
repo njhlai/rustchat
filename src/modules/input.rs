@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub enum Input {
     Join(Join),
     Post(Post),
+    Error(InputErrors),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -15,4 +16,9 @@ pub struct Join {
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Post {
     pub body: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub enum InputErrors {
+    InputParseError,
 }

@@ -10,7 +10,7 @@ use warp::filters::ws::{Message, WebSocket};
 use warp::ws::Ws;
 
 use super::hub::Hub;
-use super::input::Input;
+use super::input::{Input, InputErrors};
 
 #[derive(Debug)]
 pub struct ClientInput {
@@ -84,16 +84,20 @@ impl Server {
 		}
 	}
 
-	fn read(id: Uuid, ws_stream: SplitStream<WebSocket>) -> impl Stream<Item = Result<ClientInput, warp::Error>> {
-		ws_stream.map(move |x| match x {
-			Ok(msg) => {
-				let input: Input = serde_json::from_str(msg.to_str().unwrap()).unwrap();
-				Ok(ClientInput {
-					id: id,
-					input: input
-				})
-			},
-			Err(err) => Err(err),
-		})
+	fn read(id: Uuid, ws_stream: SplitStream<WebSocket>) -> impl Stream<Item = Result<ClientInput, Error>> {
+		ws_stream
+			.filter(|x| futures::future::ready(x.as_ref().unwrap().is_text()))
+			.map(move |x: Result<Message, Error>| match x {
+				Ok(msg) => {
+					let input: Input = serde_json::from_str(msg.to_str().unwrap_or("error"))
+						.unwrap_or(Input::Error(InputErrors::InputParseError));
+
+					Ok(ClientInput {
+						id: id,
+						input: input,
+					})
+				},
+				Err(err) => Err(err),
+			})
 	}
 }
