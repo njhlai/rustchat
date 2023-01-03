@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::{thread, time::Duration};
+use std::{time::Duration};
 
 use futures::sink::SinkExt;
 use futures::stream::{Stream, StreamExt, SplitStream};
@@ -31,27 +31,36 @@ impl Server {
 		}
 	}
 
-	pub fn run(&self) {
+	pub async fn run(&self) {
 		let (tx, rx) = unbounded_channel::<ClientInput>();
+
+		let hub = self.hub.clone();
 
 		let feed = warp::path("feed")
 			.and(warp::ws())
 			.and(warp::any().map(move || tx.clone()))
-			.and(warp::any().map(move || self.hub.clone()))
+			.and(warp::any().map(move || hub.clone()))
 			.map(
 				move |ws: Ws, client_input_sender, hub| {
-					ws.on_upgrade(move |web_socket| async move {
-						thread::spawn(move || {
-							Self::process_client(web_socket, client_input_sender, hub);
-						});
+					ws.on_upgrade(move |web_socket| async {
+						tokio::spawn(
+							Self::process_client(web_socket, client_input_sender, hub)
+						);
 					})
 				}
 			);
 
-		self.hub.run(rx);
+		let ( _, serving) = warp::serve(feed).bind_with_graceful_shutdown(([127, 0, 0, 1], self.port), async {
+			tokio::signal::ctrl_c().await.expect("failed to install CTRL+C signal handler");
+		});
+
+		tokio::select! {
+			_ = serving => {},
+			_ = self.hub.run(rx) => {}
+		}
 	}
 
-	pub fn process_client(web_socket: WebSocket, client_input_sender: UnboundedSender<ClientInput>, hub: Arc<Hub>) {
+	async fn process_client(web_socket: WebSocket, client_input_sender: UnboundedSender<ClientInput>, hub: Arc<Hub>) {
 		let (mut ws_sink, ws_stream) = web_socket.split();
 		let id = Uuid::new_v4();
 		let rx = hub.connect(id);
@@ -71,7 +80,7 @@ impl Server {
 				ws_sink.send(Message::text(json_output.unwrap()));
 			}
 
-			thread::sleep(Duration::from_millis(200));
+			tokio::time::sleep(Duration::from_millis(200)).await;
 		}
 	}
 

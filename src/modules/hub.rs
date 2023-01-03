@@ -3,6 +3,8 @@ use std::sync::mpsc::{sync_channel, SyncSender, Receiver};
 use std::sync::RwLock;
 
 use chrono::Utc;
+use futures::StreamExt;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use tokio::sync::mpsc::UnboundedReceiver;
 use uuid::Uuid;
 
@@ -26,10 +28,9 @@ impl Hub {
         }
     }
 
-    pub fn run(&self, mut rx: UnboundedReceiver<ClientInput>) {
-        while let Some(client_input) = rx.blocking_recv() {
-            self.process(client_input.id, client_input.input);
-        }
+    pub async fn run(&self, rx: UnboundedReceiver<ClientInput>) {
+        UnboundedReceiverStream::new(rx)
+            .for_each(|input| self.process(input)).await;
 
         println!("Hub shutting down");
     }
@@ -100,10 +101,10 @@ impl Hub {
         self.send(Output::Posted(Posted { message: msg }));
     }
 
-    pub fn process(&self, id: Uuid, input: Input) {
-        match input {
-            Input::Join(join) => self.process_joined(id, join),
-            Input::Post(post) => self.process_post(id, post),
+    pub async fn process(&self, client_input: ClientInput) {
+        match client_input.input {
+            Input::Join(join) => self.process_joined(client_input.id, join),
+            Input::Post(post) => self.process_post(client_input.id, post),
         };
     }
 }
