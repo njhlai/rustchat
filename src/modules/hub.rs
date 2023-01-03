@@ -30,7 +30,8 @@ impl Hub {
 
     pub async fn run(&self, rx: UnboundedReceiver<ClientInput>) {
         UnboundedReceiverStream::new(rx)
-            .for_each(|input| self.process(input)).await;
+            .for_each(|input| self.process(input))
+            .await;
 
         println!("Hub shutting down");
     }
@@ -101,7 +102,7 @@ impl Hub {
         self.send(Output::Posted(Posted { message: msg }));
     }
 
-    pub async fn process(&self, client_input: ClientInput) {
+    async fn process(&self, client_input: ClientInput) {
         match client_input.input {
             Input::Join(join) => self.process_joined(client_input.id, join),
             Input::Post(post) => self.process_post(client_input.id, post),

@@ -5,9 +5,8 @@ use futures::sink::SinkExt;
 use futures::stream::{Stream, StreamExt, SplitStream};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 use uuid::Uuid;
-use warp::Filter;
-use warp::filters::ws::{Message, WebSocket};
-use warp::ws::Ws;
+use warp::{Error, Filter};
+use warp::filters::ws::{Message, WebSocket, Ws};
 
 use super::hub::Hub;
 use super::input::{Input, InputErrors};
@@ -33,7 +32,6 @@ impl Server {
 
 	pub async fn run(&self) {
 		let (tx, rx) = unbounded_channel::<ClientInput>();
-
 		let hub = self.hub.clone();
 
 		let feed = warp::path("feed")
@@ -50,9 +48,14 @@ impl Server {
 				}
 			);
 
-		let ( _, serving) = warp::serve(feed).bind_with_graceful_shutdown(([127, 0, 0, 1], self.port), async {
-			tokio::signal::ctrl_c().await.expect("failed to install CTRL+C signal handler");
-		});
+		let (_, serving) = warp::serve(feed).bind_with_graceful_shutdown(
+			([127, 0, 0, 1], self.port),
+			async {
+				tokio::signal::ctrl_c()
+					.await
+					.expect("failed to install CTRL+C signal handler");
+			}
+		);
 
 		tokio::select! {
 			_ = serving => {},
@@ -67,9 +70,9 @@ impl Server {
 
 		tokio::spawn(
 			Self::read(id, ws_stream)
-				.for_each(move |input| {
-					client_input_sender.send(input.unwrap());
-					futures::future::ready(())
+				.for_each(move |input: Result<ClientInput, warp::Error>| {
+					client_input_sender.send(input.unwrap()).unwrap();
+					ready(())
 				})
 		);
 
@@ -86,7 +89,7 @@ impl Server {
 
 	fn read(id: Uuid, ws_stream: SplitStream<WebSocket>) -> impl Stream<Item = Result<ClientInput, Error>> {
 		ws_stream
-			.filter(|x| futures::future::ready(x.as_ref().unwrap().is_text()))
+			.filter(|x| ready(x.as_ref().unwrap().is_text()))
 			.map(move |x: Result<Message, Error>| match x {
 				Ok(msg) => {
 					let input: Input = serde_json::from_str(msg.to_str().unwrap_or("error"))
