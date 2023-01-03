@@ -77,7 +77,7 @@ impl Hub {
                 self.send_to_user(client_id, Output::CurrentState(CurrentState {
                     myself: user.clone(),
                     users: users.values().cloned().collect(),
-                    messages: self.feed.read().unwrap().messages.clone(),
+                    messages: self.feed.read().unwrap().clone(),
                 }));
 
                 // tell everyone else user joined
@@ -96,7 +96,7 @@ impl Hub {
             timestamp: Utc::now(),
             body: post.body,
         };
-        self.feed.write().unwrap().messages.push(msg.clone());
+        self.feed.write().unwrap().push(msg.clone());
 
         self.send(Output::Posted(Posted { message: msg }));
     }

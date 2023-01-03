@@ -18,17 +18,21 @@ pub struct Message {
 
 #[derive(Default)]
 pub struct Feed {
-    pub messages: Vec<Message>,
+    messages: Vec<Message>,
 }
 
 impl Feed {
-    pub fn push(&mut self, message: Message) {
-        let index = self.messages.partition_point(|x| x.timestamp < message.timestamp);
-
-        self.messages.insert(index, message);
+    pub fn clone(&self) -> Vec<Message> {
+        self.messages.clone()
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Message> {
         self.messages.iter()
+    }
+
+    pub fn push(&mut self, message: Message) {
+        let index = self.messages.partition_point(|x| x.timestamp < message.timestamp);
+
+        self.messages.insert(index, message);
     }
 }
