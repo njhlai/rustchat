@@ -10,13 +10,7 @@ use warp::{Error, Filter};
 use warp::filters::ws::{Message, WebSocket, Ws};
 
 use super::hub::Hub;
-use super::input::{Input, InputErrors};
-
-#[derive(Debug)]
-pub struct ClientInput {
-	pub id: Uuid,
-	pub input: Input,
-}
+use super::input::{ClientInput, Input, InputErrors};
 
 pub struct Server {
 	port: u16,

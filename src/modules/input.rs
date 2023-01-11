@@ -1,4 +1,11 @@
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+#[derive(Debug)]
+pub struct ClientInput {
+    pub id: Uuid,
+    pub input: Input,
+}
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", content = "payload")]

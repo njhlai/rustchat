@@ -9,9 +9,8 @@ use tokio::sync::mpsc::UnboundedReceiver;
 use uuid::Uuid;
 
 use super::data::{Feed, User, Message};
-use super::input::{Input, Join, Post};
+use super::input::{ClientInput, Input, Join, Post};
 use super::output::{CurrentState, Output, OutputErrors, UserJoined, Posted};
-use super::server::ClientInput;
 
 pub struct Hub {
     pub feed: RwLock<Feed>,
