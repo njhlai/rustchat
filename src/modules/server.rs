@@ -1,6 +1,7 @@
 use std::sync::Arc;
-use std::{time::Duration};
+use std::time::Duration;
 
+use futures::future::ready;
 use futures::sink::SinkExt;
 use futures::stream::{Stream, StreamExt, SplitStream};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};

@@ -106,7 +106,7 @@ impl Hub {
         match client_input.input {
             Input::Join(join) => self.process_joined(client_input.id, join),
             Input::Post(post) => self.process_post(client_input.id, post),
-            Input::Error(err) => (),
+            Input::Error(_) => (),
         };
     }
 }
