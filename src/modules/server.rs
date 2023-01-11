@@ -78,10 +78,12 @@ impl Server {
 		);
 
 		loop {
-			for msg in rx.try_iter() {
-				let json_output = serde_json::to_string(&msg);
-				println!("Read json: {:#?}", json_output);
-				ws_sink.send(Message::text(json_output.unwrap()));
+			let msgs: Vec<Message> = rx.try_iter()
+				.map(|msg| Message::text(serde_json::to_string(&msg).unwrap()))
+				.collect();
+
+			for msg in msgs {
+				ws_sink.send(msg).await.unwrap();
 			}
 
 			tokio::time::sleep(Duration::from_millis(200)).await;
