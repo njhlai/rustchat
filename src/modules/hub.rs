@@ -3,7 +3,7 @@ use std::sync::mpsc::{sync_channel, SyncSender, Receiver};
 use std::sync::RwLock;
 
 use chrono::Utc;
-use futures::StreamExt;
+use futures_util::stream::StreamExt;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tokio::sync::mpsc::UnboundedReceiver;
 use uuid::Uuid;

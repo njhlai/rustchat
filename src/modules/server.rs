@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use futures::future::ready;
-use futures::sink::SinkExt;
-use futures::stream::{Stream, StreamExt, SplitStream};
+use futures_util::future::ready;
+use futures_util::sink::SinkExt;
+use futures_util::stream::{Stream, StreamExt, SplitStream};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 use uuid::Uuid;
 use warp::{Error, Filter};
