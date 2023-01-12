@@ -66,18 +66,33 @@ impl Server {
         tokio::spawn(
             Self::read(id, ws_stream)
                 .for_each(move |input: Result<ClientInput, warp::Error>| {
-                    client_input_sender.send(input.unwrap()).unwrap();
+                    match input {
+                        Ok(msg) => client_input_sender.send(msg)
+                            .unwrap_or_else(|err| {
+                                println!("Server: Error receiving message from client with error: {:#?}", err);
+                                ()
+                            }),
+                        Err(_) => (),
+                    }
                     ready(())
                 })
         );
 
         loop {
             let msgs: Vec<Message> = rx.try_iter()
-                .map(|msg| Message::text(serde_json::to_string(&msg).unwrap()))
+                .map(|msg| {
+                    Message::text(
+                        serde_json::to_string(&msg)
+                            .unwrap_or("Output Parse Error".to_string())
+                    )
+                })
                 .collect();
 
             for msg in msgs {
-                ws_sink.send(msg).await.unwrap();
+                ws_sink.send(msg).await.unwrap_or_else(|err| {
+                    println!("Server: Error sending message to client with error: {:#?}", err);
+                    ()
+                });
             }
 
             tokio::time::sleep(Duration::from_millis(200)).await;
@@ -86,11 +101,21 @@ impl Server {
 
     fn read(id: Uuid, ws_stream: SplitStream<WebSocket>) -> impl Stream<Item = Result<ClientInput, Error>> {
         ws_stream
-            .filter(|x| ready(x.as_ref().unwrap().is_text()))
+            .filter(|x| {
+                ready(
+                    match x.as_ref() {
+                        Ok(msg) => msg.is_text(),
+                        Err(_) => false,
+                    }
+                )
+            })
             .map(move |x: Result<Message, Error>| match x {
                 Ok(msg) => {
                     let input: Input = serde_json::from_str(msg.to_str().unwrap_or("error"))
-                        .unwrap_or(Input::Error(InputErrors::InputParseError));
+                        .unwrap_or_else(|err| {
+                            println!("Server: Error parsing input from client with error: {:#?}", err);
+                            Input::Error(InputErrors::InputParseError)
+                        });
 
                     Ok(ClientInput { id, input })
                 },

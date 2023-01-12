@@ -38,19 +38,39 @@ impl Hub {
     pub fn send(&self, output: Output) {
         self.outpost.read().unwrap()
             .values()
-            .for_each(|chan|  chan.send(output.clone()).unwrap())
+            .for_each(|output_sender|  {
+                output_sender.send(output.clone()).unwrap_or_else(|err| {
+                    println!("Hub: Error sending message to all clients with error: {:#?}", err);
+                    ()
+                })
+            })
     }
 
     pub fn send_to_user(&self, id: Uuid, output: Output) {
-        self.outpost.read().unwrap()
-            .get(&id).unwrap()
-            .send(output).unwrap();
+        match self.outpost.read().unwrap().get(&id) {
+            Some(x) => {
+                x.send(output)
+                    .unwrap_or_else(|err| {
+                        println!("Hub: Error sending message to client {} with error: {:#?}", id, err);
+                        ()
+                    })
+            },
+            None => {
+                println!("Hub: can't find client with id {}", id);
+                ()
+            },
+        }
     }
 
     pub fn send_to_complement(&self, id: Uuid, output: Output) {
         self.outpost.read().unwrap()
             .iter().filter(|(&k, _)| k != id)
-            .for_each(|(_, v)| v.send(output.clone()).unwrap())
+            .for_each(|(k, v)| {
+                v.send(output.clone()).unwrap_or_else(|err| {
+                    println!("Hub: Error sending message to client {} with error: {:#?}", k, err);
+                    ()
+                })
+            })
     }
 
     pub fn connect(&self, id: Uuid) -> Receiver<Output> {
