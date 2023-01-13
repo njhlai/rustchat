@@ -11,6 +11,7 @@ pub struct ClientInput {
 #[serde(tag = "type", content = "payload")]
 pub enum Input {
     Join(Join),
+    Leave,
     Post(Post),
     Error(InputErrors),
 }

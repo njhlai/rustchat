@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use super::data::{Feed, User, Message};
 use super::input::{ClientInput, Input, Join, Post};
-use super::output::{CurrentState, Output, OutputErrors, UserJoined, Posted};
+use super::output::{CurrentState, Output, OutputErrors, UserJoined, UserLeft, Posted};
 
 pub struct Hub {
     pub feed: RwLock<Feed>,
@@ -84,6 +84,7 @@ impl Hub {
         let mut users = self.users.write().unwrap();
         match users.entry(client_id) {
             Entry::Occupied(_) => {
+                println!("Hub: Joining user already exists in user list.");
                 self.send_to_user(client_id, Output::Error(OutputErrors::UserAlreadyJoined));
             },
             Entry::Vacant(x) => {
@@ -109,6 +110,25 @@ impl Hub {
         };
     }
 
+    fn process_left(&self, client_id: Uuid) {
+        let mut users = self.users.write().unwrap();
+        match users.entry(client_id) {
+            Entry::Occupied(x) => {
+                let leaving_user = x.get().clone();
+                x.remove();
+
+                // tell everyone else user left
+                self.send_to_complement(client_id, Output::UserLeft(UserLeft {
+                    user: leaving_user,
+                    timestamp: Utc::now(),
+                }));
+            },
+            Entry::Vacant(_) => {
+                println!("Hub: Leaving user does not exist in user list, not doing anything.");
+            }
+        }
+    }
+
     fn process_post(&self, sender_id: Uuid, post: Post) {
         let msg = Message {
             id: Uuid::new_v4(),
@@ -124,6 +144,7 @@ impl Hub {
     async fn process(&self, client_input: ClientInput) {
         match client_input.input {
             Input::Join(join) => self.process_joined(client_input.id, join),
+            Input::Leave => self.process_left(client_input.id),
             Input::Post(post) => self.process_post(client_input.id, post),
             Input::Error(_) => (),
         };

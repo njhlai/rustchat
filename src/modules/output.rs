@@ -1,6 +1,5 @@
 use chrono::{DateTime,Utc};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use super::data::{Message,User};
 
@@ -35,7 +34,7 @@ pub struct UserJoined {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct UserLeft {
-    pub id: Uuid,
+    pub user: User,
     pub timestamp: DateTime<Utc>,
 }
 
