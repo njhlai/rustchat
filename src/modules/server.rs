@@ -20,7 +20,7 @@ pub struct Server {
 impl Server {
     pub fn new(port: u16) -> Self {
         Server {
-            port: port,
+            port,
             hub: Arc::new(Hub::new()),
         }
     }
@@ -66,13 +66,11 @@ impl Server {
         tokio::spawn(
             Self::read(id, ws_stream)
                 .for_each(move |input: Result<ClientInput, warp::Error>| {
-                    match input {
-                        Ok(msg) => client_input_sender.send(msg)
+                    if let Ok(msg) = input {
+                        client_input_sender.send(msg)
                             .unwrap_or_else(|err| {
-                                println!("Server: Error receiving message from client with error: {:#?}", err);
-                                ()
-                            }),
-                        Err(_) => (),
+                                println!("Server: Error receiving message from client with error: {err:#?}");
+                            })
                     }
                     ready(())
                 })
@@ -83,15 +81,14 @@ impl Server {
                 .map(|msg| {
                     Message::text(
                         serde_json::to_string(&msg)
-                            .unwrap_or("Output Parse Error".to_string())
+                            .unwrap_or_else(|_| "Output Parse Error".to_string())
                     )
                 })
                 .collect();
 
             for msg in msgs {
                 ws_sink.send(msg).await.unwrap_or_else(|err| {
-                    println!("Server: Error sending message to client with error: {:#?}", err);
-                    ()
+                    println!("Server: Error sending message to client with error: {err:#?}");
                 });
             }
 
@@ -113,7 +110,7 @@ impl Server {
                 Ok(msg) => {
                     let input: Input = serde_json::from_str(msg.to_str().unwrap_or("error"))
                         .unwrap_or_else(|err| {
-                            println!("Server: Error parsing input from client with error: {:#?}", err);
+                            println!("Server: Error parsing input from client with error: {err:#?}");
                             Input::Error(InputErrors::InputParseError)
                         });
 

@@ -40,8 +40,7 @@ impl Hub {
             .values()
             .for_each(|output_sender|  {
                 output_sender.send(output.clone()).unwrap_or_else(|err| {
-                    println!("Hub: Error sending message to all clients with error: {:#?}", err);
-                    ()
+                    println!("Hub: Error sending message to all clients with error: {err:#?}");
                 })
             })
     }
@@ -51,13 +50,11 @@ impl Hub {
             Some(x) => {
                 x.send(output)
                     .unwrap_or_else(|err| {
-                        println!("Hub: Error sending message to client {} with error: {:#?}", id, err);
-                        ()
+                        println!("Hub: Error sending message to client {id} with error: {err:#?}");
                     })
             },
             None => {
-                println!("Hub: can't find client with id {}", id);
-                ()
+                println!("Hub: can't find client with id {id}");
             },
         }
     }
@@ -67,8 +64,7 @@ impl Hub {
             .iter().filter(|(&k, _)| k != id)
             .for_each(|(k, v)| {
                 v.send(output.clone()).unwrap_or_else(|err| {
-                    println!("Hub: Error sending message to client {} with error: {:#?}", k, err);
-                    ()
+                    println!("Hub: Error sending message to client {k} with error: {err:#?}");
                 })
             })
     }
@@ -103,7 +99,7 @@ impl Hub {
 
                 // tell everyone else user joined
                 self.send_to_complement(client_id, Output::UserJoined(UserJoined {
-                    user: user,
+                    user,
                     timestamp: Utc::now(),
                 }));
             },
