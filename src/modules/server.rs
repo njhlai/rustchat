@@ -3,11 +3,11 @@ use std::time::Duration;
 
 use futures_util::future::ready;
 use futures_util::sink::SinkExt;
-use futures_util::stream::{Stream, StreamExt, SplitStream};
+use futures_util::stream::{SplitStream, Stream, StreamExt};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 use uuid::Uuid;
-use warp::{Error, Filter};
 use warp::filters::ws::{Message, WebSocket, Ws};
+use warp::{Error, Filter};
 
 use super::hub::Hub;
 use super::input::{ClientInput, Input, InputErrors};
@@ -19,10 +19,7 @@ pub struct Server {
 
 impl Server {
     pub fn new(port: u16) -> Self {
-        Server {
-            port,
-            hub: Arc::new(Hub::new()),
-        }
+        Server { port, hub: Arc::new(Hub::new()) }
     }
 
     pub async fn run(&self) {
@@ -33,24 +30,17 @@ impl Server {
             .and(warp::ws())
             .and(warp::any().map(move || tx.clone()))
             .and(warp::any().map(move || hub.clone()))
-            .map(
-                move |ws: Ws, client_input_sender, hub| {
-                    ws.on_upgrade(move |web_socket| async {
-                        tokio::spawn(
-                            Self::process_client(web_socket, client_input_sender, hub)
-                        );
-                    })
-                }
-            );
+            .map(move |ws: Ws, client_input_sender, hub| {
+                ws.on_upgrade(move |web_socket| async {
+                    tokio::spawn(Self::process_client(web_socket, client_input_sender, hub));
+                })
+            });
 
-        let (_, serving) = warp::serve(feed).bind_with_graceful_shutdown(
-            ([127, 0, 0, 1], self.port),
-            async {
-                tokio::signal::ctrl_c()
-                    .await
-                    .expect("failed to install CTRL+C signal handler");
-            }
-        );
+        let (_, serving) = warp::serve(feed).bind_with_graceful_shutdown(([127, 0, 0, 1], self.port), async {
+            tokio::signal::ctrl_c()
+                .await
+                .expect("failed to install CTRL+C signal handler");
+        });
 
         tokio::select! {
             _ = serving => {},
@@ -63,27 +53,19 @@ impl Server {
         let id = Uuid::new_v4();
         let rx = hub.connect(id);
 
-        tokio::spawn(
-            Self::read(id, ws_stream)
-                .for_each(move |input: Result<ClientInput, warp::Error>| {
-                    if let Ok(msg) = input {
-                        client_input_sender.send(msg)
-                            .unwrap_or_else(|err| {
-                                println!("Server: Error receiving message from client with error: {err:#?}");
-                            })
-                    }
-                    ready(())
+        tokio::spawn(Self::read(id, ws_stream).for_each(move |input: Result<ClientInput, warp::Error>| {
+            if let Ok(msg) = input {
+                client_input_sender.send(msg).unwrap_or_else(|err| {
+                    println!("Server: Error receiving message from client with error: {err:#?}");
                 })
-        );
+            }
+            ready(())
+        }));
 
         loop {
-            let msgs: Vec<Message> = rx.try_iter()
-                .map(|msg| {
-                    Message::text(
-                        serde_json::to_string(&msg)
-                            .unwrap_or_else(|_| "Output Parse Error".to_string())
-                    )
-                })
+            let msgs: Vec<Message> = rx
+                .try_iter()
+                .map(|msg| Message::text(serde_json::to_string(&msg).unwrap_or_else(|_| "Output Parse Error".to_string())))
                 .collect();
 
             for msg in msgs {
@@ -99,23 +81,20 @@ impl Server {
     fn read(id: Uuid, ws_stream: SplitStream<WebSocket>) -> impl Stream<Item = Result<ClientInput, Error>> {
         ws_stream
             .filter(|x| {
-                ready(
-                    match x.as_ref() {
-                        Ok(msg) => msg.is_text(),
-                        Err(_) => false,
-                    }
-                )
+                ready(match x.as_ref() {
+                    Ok(msg) => msg.is_text(),
+                    Err(_) => false,
+                })
             })
             .map(move |x: Result<Message, Error>| match x {
                 Ok(msg) => {
-                    let input: Input = serde_json::from_str(msg.to_str().unwrap_or("error"))
-                        .unwrap_or_else(|err| {
-                            println!("Server: Error parsing input from client with error: {err:#?}");
-                            Input::Error(InputErrors::InputParseError)
-                        });
+                    let input: Input = serde_json::from_str(msg.to_str().unwrap_or("error")).unwrap_or_else(|err| {
+                        println!("Server: Error parsing input from client with error: {err:#?}");
+                        Input::Error(InputErrors::InputParseError)
+                    });
 
                     Ok(ClientInput { id, input })
-                },
+                }
                 Err(err) => Err(err),
             })
     }

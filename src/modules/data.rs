@@ -1,4 +1,4 @@
-use chrono::{DateTime,Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -26,6 +26,7 @@ impl Feed {
         self.messages.clone()
     }
 
+    #[allow(dead_code)]
     pub fn iter(&self) -> impl Iterator<Item = &Message> {
         self.messages.iter()
     }

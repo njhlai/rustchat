@@ -1,7 +1,7 @@
-use chrono::{DateTime,Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use super::data::{Message,User};
+use super::data::{Message, User};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", content = "payload")]
