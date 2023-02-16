@@ -57,7 +57,7 @@ impl Server {
             if let Ok(msg) = input {
                 client_input_sender.send(msg).unwrap_or_else(|err| {
                     println!("Server: Error receiving message from client with error: {err:#?}");
-                })
+                });
             }
             ready(())
         }));

@@ -20,7 +20,7 @@ pub struct Hub {
 
 impl Hub {
     pub fn new() -> Self {
-        Hub { feed: Default::default(), users: Default::default(), outpost: Default::default() }
+        Hub { feed: RwLock::default(), users: RwLock::default(), outpost: RwLock::default() }
     }
 
     pub async fn run(&self, rx: UnboundedReceiver<ClientInput>) {
@@ -29,12 +29,12 @@ impl Hub {
         println!("Hub shutting down");
     }
 
-    pub fn send(&self, output: Output) {
+    pub fn send(&self, output: &Output) {
         self.outpost.read().unwrap().values().for_each(|output_sender| {
             output_sender.send(output.clone()).unwrap_or_else(|err| {
                 println!("Hub: Error sending message to all clients with error: {err:#?}");
-            })
-        })
+            });
+        });
     }
 
     pub fn send_to_user(&self, id: Uuid, output: Output) {
@@ -48,7 +48,7 @@ impl Hub {
         }
     }
 
-    pub fn send_to_complement(&self, id: Uuid, output: Output) {
+    pub fn send_to_complement(&self, id: Uuid, output: &Output) {
         self.outpost
             .read()
             .unwrap()
@@ -57,8 +57,8 @@ impl Hub {
             .for_each(|(k, v)| {
                 v.send(output.clone()).unwrap_or_else(|err| {
                     println!("Hub: Error sending message to client {k} with error: {err:#?}");
-                })
-            })
+                });
+            });
     }
 
     pub fn connect(&self, id: Uuid) -> Receiver<Output> {
@@ -68,7 +68,7 @@ impl Hub {
         rx
     }
 
-    fn process_joined(&self, client_id: Uuid, join: Join) {
+    fn process_joined(&self, client_id: Uuid, join: &Join) {
         let mut users = self.users.write().unwrap();
         match users.entry(client_id) {
             Entry::Occupied(_) => {
@@ -90,7 +90,7 @@ impl Hub {
                 );
 
                 // tell everyone else user joined
-                self.send_to_complement(client_id, Output::UserJoined(UserJoined { user, timestamp: Utc::now() }));
+                self.send_to_complement(client_id, &Output::UserJoined(UserJoined { user, timestamp: Utc::now() }));
             }
         };
     }
@@ -103,7 +103,7 @@ impl Hub {
                 x.remove();
 
                 // tell everyone else user left
-                self.send_to_complement(client_id, Output::UserLeft(UserLeft { user: leaving_user, timestamp: Utc::now() }));
+                self.send_to_complement(client_id, &Output::UserLeft(UserLeft { user: leaving_user, timestamp: Utc::now() }));
             }
             Entry::Vacant(_) => {
                 println!("Hub: Leaving user does not exist in user list, not doing anything.");
@@ -115,12 +115,12 @@ impl Hub {
         let msg = Message { id: Uuid::new_v4(), sender: sender_id, timestamp: Utc::now(), body: post.body };
         self.feed.write().unwrap().push(msg.clone());
 
-        self.send(Output::Posted(Posted { message: msg }));
+        self.send(&Output::Posted(Posted { message: msg }));
     }
 
     async fn process(&self, client_input: ClientInput) {
         match client_input.input {
-            Input::Join(join) => self.process_joined(client_input.id, join),
+            Input::Join(join) => self.process_joined(client_input.id, &join),
             Input::Leave => self.process_left(client_input.id),
             Input::Post(post) => self.process_post(client_input.id, post),
             Input::Error(_) => (),
