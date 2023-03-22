@@ -1,6 +1,6 @@
 mod modules;
 
-use crate::modules::server::Server;
+use modules::server::Server;
 
 #[tokio::main]
 async fn main() {
