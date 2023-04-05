@@ -730,7 +730,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustchat"
+name = "rustchat-core"
 version = "0.1.0"
 dependencies = [
  "chrono",

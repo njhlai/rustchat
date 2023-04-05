@@ -9,5 +9,5 @@ rustchat is a toy chat app written in Rust, as an exercise to understand how Rus
 ## Usage
 To start the server, run:
 ```sh
-cargo run
+cd core && cargo run
 ```
