@@ -1,16 +1,17 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use futures_util::future::ready;
+use futures_util::future;
 use futures_util::sink::SinkExt;
-use futures_util::stream::{SplitStream, Stream, StreamExt};
+use futures_util::stream::StreamExt;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 use uuid::Uuid;
 use warp::filters::ws::{Message, WebSocket, Ws};
-use warp::{Error, Filter};
+use warp::Filter;
 
 use super::hub::Hub;
-use super::input::{ClientInput, Input, InputErrors};
+use super::input::ClientInput;
+use super::utils;
 
 pub struct Server {
     port: u16,
@@ -43,7 +44,7 @@ impl Server {
         });
 
         tokio::select! {
-            _ = serving => {},
+            _ = serving => { println!(); },
             _ = self.hub.run(rx) => {}
         }
     }
@@ -53,49 +54,33 @@ impl Server {
         let id = Uuid::new_v4();
         let rx = hub.connect(id);
 
-        tokio::spawn(Self::read(id, ws_stream).for_each(move |input: Result<ClientInput, warp::Error>| {
+        tokio::spawn(utils::read(id, ws_stream).for_each(move |input: Result<ClientInput, warp::Error>| {
             if let Ok(msg) = input {
+                println!("INFO: Received message {:#?} from client {id}", &msg);
                 client_input_sender.send(msg).unwrap_or_else(|err| {
-                    println!("Server: Error receiving message from client with error: {err:#?}");
+                    println!("ERR: Error receiving message from client {id} with error: {err:#?}");
                 });
             }
-            ready(())
+            future::ready(())
         }));
 
         loop {
             let msgs: Vec<Message> = rx
                 .try_iter()
-                .map(|msg| Message::text(serde_json::to_string(&msg).unwrap_or_else(|_| "Output Parse Error".to_string())))
+                .map(|msg| {
+                    println!("INFO: Sending message {msg:#?} to client {id}");
+                    Message::text(serde_json::to_string(&msg).unwrap_or_else(|_| "Output Parse Error".to_string()))
+                })
                 .collect();
 
             for msg in msgs {
+                utils::log_warp_message(id, &msg);
                 ws_sink.send(msg).await.unwrap_or_else(|err| {
-                    println!("Server: Error sending message to client with error: {err:#?}");
+                    println!("ERR: Error sending message to client {id} with error: {err:#?}");
                 });
             }
 
             tokio::time::sleep(Duration::from_millis(200)).await;
         }
-    }
-
-    fn read(id: Uuid, ws_stream: SplitStream<WebSocket>) -> impl Stream<Item = Result<ClientInput, Error>> {
-        ws_stream
-            .filter(|x| {
-                ready(match x.as_ref() {
-                    Ok(msg) => msg.is_text(),
-                    Err(_) => false,
-                })
-            })
-            .map(move |x: Result<Message, Error>| match x {
-                Ok(msg) => {
-                    let input: Input = serde_json::from_str(msg.to_str().unwrap_or("error")).unwrap_or_else(|err| {
-                        println!("Server: Error parsing input from client with error: {err:#?}");
-                        Input::Error(InputErrors::InputParseError)
-                    });
-
-                    Ok(ClientInput { id, input })
-                }
-                Err(err) => Err(err),
-            })
     }
 }

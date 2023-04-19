@@ -26,13 +26,13 @@ impl Hub {
     pub async fn run(&self, rx: UnboundedReceiver<ClientInput>) {
         UnboundedReceiverStream::new(rx).for_each(|input| self.process(input)).await;
 
-        println!("Hub shutting down");
+        println!("INFO: Hub shutting down");
     }
 
     pub fn send(&self, output: &Output) {
         self.outpost.read().unwrap().values().for_each(|output_sender| {
             output_sender.send(output.clone()).unwrap_or_else(|err| {
-                println!("Hub: Error sending message to all clients with error: {err:#?}");
+                println!("ERR: Internal hub error sending message to all clients with error: {err:#?}");
             });
         });
     }
@@ -40,10 +40,10 @@ impl Hub {
     pub fn send_to_user(&self, id: Uuid, output: Output) {
         match self.outpost.read().unwrap().get(&id) {
             Some(x) => x.send(output).unwrap_or_else(|err| {
-                println!("Hub: Error sending message to client {id} with error: {err:#?}");
+                println!("ERR: Internal hub error sending message to client {id} with error: {err:#?}");
             }),
             None => {
-                println!("Hub: can't find client with id {id}");
+                println!("ERR: Internal hub error, can't find client {id} to send message");
             }
         }
     }
@@ -56,7 +56,7 @@ impl Hub {
             .filter(|(&k, _)| k != id)
             .for_each(|(k, v)| {
                 v.send(output.clone()).unwrap_or_else(|err| {
-                    println!("Hub: Error sending message to client {k} with error: {err:#?}");
+                    println!("ERR: Internal hub error sending message to client {k} with error: {err:#?}");
                 });
             });
     }
@@ -71,8 +71,9 @@ impl Hub {
     fn process_joined(&self, client_id: Uuid, join: &Join) {
         let mut users = self.users.write().unwrap();
         match users.entry(client_id) {
-            Entry::Occupied(_) => {
-                println!("Hub: Joining user already exists in user list.");
+            Entry::Occupied(u) => {
+                let user = u.get();
+                println!("ERR: Internal hub error, client {client_id} already joined as user {user:#?}");
                 self.send_to_user(client_id, Output::Error(OutputErrors::UserAlreadyJoined));
             }
             Entry::Vacant(x) => {
@@ -106,7 +107,7 @@ impl Hub {
                 self.send_to_complement(client_id, &Output::UserLeft(UserLeft { user: leaving_user, timestamp: Utc::now() }));
             }
             Entry::Vacant(_) => {
-                println!("Hub: Leaving user does not exist in user list, not doing anything.");
+                println!("WARN: Leaving user of client {client_id} does not exist in hub's user list, not doing anything");
             }
         }
     }
