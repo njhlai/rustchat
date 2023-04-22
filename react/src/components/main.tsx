@@ -5,7 +5,7 @@ import { Provider } from "react-redux";
 
 import { leave } from "../api/user/actions";
 import store from "../app/store";
-import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { serverUrl, useAppDispatch, useAppSelector } from "../app/hooks";
 import Login from "./login";
 import UserListWindow from "./userlist";
 
@@ -40,13 +40,18 @@ function SwitcherWindow() {
     );
 }
 
-export default function MainWindow() {
+export default function MainWindow({ title }: { title?: string }) {
     return (
-        <div style={styles.container}>
-            <Provider store={store}>
-                <UserListWindow />
-                <SwitcherWindow />
-            </Provider>
-        </div>
+        <>
+            <h1>
+                {title ?? "rustchat"}@{serverUrl}
+            </h1>
+            <div style={styles.container}>
+                <Provider store={store}>
+                    <UserListWindow />
+                    <SwitcherWindow />
+                </Provider>
+            </div>
+        </>
     );
 }

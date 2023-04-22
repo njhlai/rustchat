@@ -5,6 +5,7 @@ import { Input, InputTypes } from "../types/input";
 import { Output, OutputTypes } from "../types/output";
 import { Joined } from "../user/slice";
 import { Load, UserJoined, UserLeft } from "../feed/slice";
+import { serverUrl } from "../../app/hooks";
 
 function createWebSocketChannel(ws: WebSocket) {
     return eventChannel<Output>((emit) => {
@@ -77,7 +78,7 @@ function* write(ws: WebSocket) {
 
 function* connectWebSocket() {
     const isBrowser = typeof window != "undefined";
-    const ws = isBrowser ? new WebSocket("ws://localhost:8080/feed") : null;
+    const ws = isBrowser ? new WebSocket("ws://" + serverUrl + "/feed") : null;
 
     if (ws) {
         const wsChannel = (yield call(
