@@ -80,7 +80,6 @@ impl Hub {
                 let user = User { id: client_id, name: join.name.trim().to_string() };
                 x.insert(user.clone());
 
-                // send feed to user
                 self.send_to_user(
                     client_id,
                     Output::CurrentState(CurrentState {
@@ -90,7 +89,6 @@ impl Hub {
                     }),
                 );
 
-                // tell everyone else user joined
                 self.send_to_complement(client_id, &Output::UserJoined(UserJoined { user, timestamp: Utc::now() }));
             }
         };
@@ -101,10 +99,13 @@ impl Hub {
         match users.entry(client_id) {
             Entry::Occupied(x) => {
                 let leaving_user = x.get().clone();
+                {
+                    let mut map = self.outpost.write().unwrap();
+                    map.remove(&client_id);
+                }
                 x.remove();
 
-                // tell everyone else user left
-                self.send_to_complement(client_id, &Output::UserLeft(UserLeft { user: leaving_user, timestamp: Utc::now() }));
+                self.send(&Output::UserLeft(UserLeft { user: leaving_user, timestamp: Utc::now() }));
             }
             Entry::Vacant(_) => {
                 println!("WARN: Leaving user of client {client_id} does not exist in hub's user list, not doing anything");
