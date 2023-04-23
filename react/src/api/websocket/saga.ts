@@ -4,7 +4,7 @@ import { EventChannel, eventChannel } from "redux-saga";
 import { Input, InputTypes } from "../types/input";
 import { Output, OutputTypes } from "../types/output";
 import { Joined } from "../user/slice";
-import { Load, UserJoined, UserLeft } from "../feed/slice";
+import { Load, Posted, UserJoined, UserLeft } from "../feed/slice";
 import { serverUrl } from "../../app/hooks";
 
 function createWebSocketChannel(ws: WebSocket) {
@@ -46,6 +46,7 @@ function* read(wsChannel: EventChannel<Output>) {
                     output.payload.message.body
                 );
 
+                yield put(Posted(output.payload.message));
                 break;
             case OutputTypes.UserJoined:
                 console.log(output.payload.user.id, "joined the server");

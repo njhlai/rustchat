@@ -1,4 +1,4 @@
-import { InputTypes, JoinInput, LeaveInput } from "../types/input";
+import { InputTypes, JoinInput, LeaveInput, PostInput } from "../types/input";
 
 export function join(name: string) {
     return {
@@ -13,4 +13,13 @@ export function leave() {
     return {
         type: InputTypes.Leave,
     } as LeaveInput;
+}
+
+export function post(body: string) {
+    return {
+        type: InputTypes.Post,
+        payload: {
+            body: body,
+        },
+    } as PostInput;
 }

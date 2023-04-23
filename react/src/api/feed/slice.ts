@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { Change, Feed } from "../types/data";
+import { Change, Feed, Message } from "../types/data";
 
 const feedSlice = createSlice({
     name: "feed",
@@ -11,6 +11,12 @@ const feedSlice = createSlice({
     reducers: {
         Load(state: Feed, action: PayloadAction<Feed>) {
             return action.payload;
+        },
+        Posted(state: Feed, action: PayloadAction<Message>) {
+            return {
+                ...state,
+                currMessages: [...state.currMessages, action.payload],
+            };
         },
         UserJoined(state: Feed, action: PayloadAction<Change>) {
             return {
@@ -29,5 +35,5 @@ const feedSlice = createSlice({
     },
 });
 
-export const { Load, UserJoined, UserLeft } = feedSlice.actions;
+export const { Load, Posted, UserJoined, UserLeft } = feedSlice.actions;
 export default feedSlice.reducer;
