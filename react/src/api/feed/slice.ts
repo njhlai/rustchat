@@ -5,7 +5,8 @@ const feedSlice = createSlice({
     name: "feed",
     initialState: {
         users: [],
-        messages: [],
+        prevMessages: [],
+        currMessages: [],
     } as Feed,
     reducers: {
         Load(state: Feed, action: PayloadAction<Feed>) {

@@ -32,7 +32,8 @@ function* read(wsChannel: EventChannel<Output>) {
                 yield put(
                     Load({
                         users: output.payload.users,
-                        messages: output.payload.messages,
+                        prevMessages: output.payload.messages,
+                        currMessages: [],
                     })
                 );
                 break;

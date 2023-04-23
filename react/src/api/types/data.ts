@@ -14,7 +14,8 @@ export interface Message {
 
 export interface Feed {
     users: User[];
-    messages: Message[];
+    prevMessages: Message[];
+    currMessages: Message[];
 }
 
 export interface Change {
