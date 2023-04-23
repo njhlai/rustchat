@@ -1,44 +1,22 @@
 "use client";
 
-import { CSSProperties, useEffect } from "react";
+import { CSSProperties } from "react";
 import { Provider } from "react-redux";
 
-import { leave } from "../api/user/actions";
 import store from "../app/store";
-import { serverUrl, useAppDispatch, useAppSelector } from "../app/hooks";
-import Login from "./login";
+import { serverUrl } from "../app/hooks";
 import UserListWindow from "./userlist";
+import SwitcherWindow from "./switcher";
 
 const styles = {
-    feed: {
-        flexGrow: 6,
-        margin: "auto",
-        textAlign: "center",
-    },
     container: {
         borderTopStyle: "solid",
         display: "flex",
         flexDirection: "row",
         height: "100%",
+        justifyContent: "space-between",
     },
 } as Record<string, CSSProperties>;
-
-function SwitcherWindow() {
-    const user = useAppSelector((state) => state.user);
-    const dispatch = useAppDispatch();
-
-    useEffect(() => {
-        function leaveServer(_: BeforeUnloadEvent) {
-            dispatch(leave());
-        }
-
-        window.addEventListener("beforeunload", leaveServer);
-    });
-
-    return (
-        <div style={styles.feed}>{user ? "Hello " + user.name : <Login />}</div>
-    );
-}
 
 export default function MainWindow({ title }: { title?: string }) {
     return (
