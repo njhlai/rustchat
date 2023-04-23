@@ -40,19 +40,19 @@ export default function Login() {
 
     return (
         <>
-            <div style={styles.login}>
-                <h3>Welcome!</h3>
+            <h3>Welcome!</h3>
+            <span style={styles.login}>
                 <input
                     className="login_input"
                     type="text"
-                    name="username"
+                    placeholder="username"
                     value={name}
                     onChange={handleNameChange}
                 />
                 <button style={styles.joinButton} onClick={handleJoin}>
                     Join!
                 </button>
-            </div>
+            </span>
         </>
     );
 }
