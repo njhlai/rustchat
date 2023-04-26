@@ -2,7 +2,6 @@ export enum InputTypes {
     Join = "Join",
     Leave = "Leave",
     Post = "Post",
-    // Error = "Error",
 }
 
 export interface JoinInput {

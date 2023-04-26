@@ -4,6 +4,7 @@ import { CSSProperties, ChangeEvent, FormEvent, useState } from "react";
 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { post } from "../api/user/actions";
+import { ActivityTypes } from "../api/types/data";
 
 const styles = {
     chat: {
@@ -35,8 +36,7 @@ const styles = {
 } as Record<string, CSSProperties>;
 
 export default function Feed({ username }: { username: string }) {
-    const prevMessages = useAppSelector((state) => state.feed.prevMessages);
-    const messages = useAppSelector((state) => state.feed.currMessages);
+    const acitivities = useAppSelector((state) => state.feed.activities);
 
     const [message, setMessage] = useState("");
 
@@ -55,36 +55,80 @@ export default function Feed({ username }: { username: string }) {
     return (
         <>
             <ul style={styles.chat}>
-                {prevMessages.map((msg) => {
-                    return (
-                        <li key={msg.id.toString()}>
-                            <span style={styles.id}>
-                                {msg.sender.toString()}
-                            </span>
-                            : {msg.body}{" "}
-                            <span style={styles.timestamp}>
-                                {msg.timestamp}
-                            </span>
-                        </li>
-                    );
-                })}
-            </ul>
-            <p>
-                Hello <span style={styles.myself}>{username}</span>!
-            </p>
-            <ul style={styles.chat}>
-                {messages.map((msg) => {
-                    return (
-                        <li key={msg.id.toString()}>
-                            <span style={styles.id}>
-                                {msg.sender.toString()}
-                            </span>
-                            : {msg.body}{" "}
-                            <span style={styles.timestamp}>
-                                {msg.timestamp}
-                            </span>
-                        </li>
-                    );
+                {acitivities.map((activity) => {
+                    switch (activity.type) {
+                        case ActivityTypes.Load:
+                            return (
+                                <li style={{ margin: 15, textAlign: "center" }}>
+                                    {" "}
+                                    Hello{" "}
+                                    <span style={styles.myself}>
+                                        {username}
+                                    </span>
+                                    !
+                                </li>
+                            );
+
+                            break;
+                        case ActivityTypes.Message:
+                            return (
+                                <li key={activity.event.id.toString()}>
+                                    <span style={styles.id}>
+                                        {activity.event.sender.toString()}
+                                    </span>
+                                    : {activity.event.body}{" "}
+                                    <span style={styles.timestamp}>
+                                        {activity.event.timestamp}
+                                    </span>
+                                </li>
+                            );
+
+                            break;
+                        case ActivityTypes.UserJoined:
+                            return (
+                                <li
+                                    style={{
+                                        margin: 15,
+                                        textAlign: "center",
+                                        fontStyle: "italic",
+                                    }}
+                                >
+                                    <span style={styles.id}>
+                                        {activity.event.user.id.toString()}
+                                    </span>
+                                    {" joined the server @ "}
+                                    <span style={{ color: "red" }}>
+                                        {activity.event.timestamp}
+                                    </span>
+                                </li>
+                            );
+
+                            break;
+                        case ActivityTypes.UserLeft:
+                            return (
+                                <li
+                                    style={{
+                                        margin: 15,
+                                        textAlign: "center",
+                                        fontStyle: "italic",
+                                    }}
+                                >
+                                    <span style={styles.id}>
+                                        {activity.event.user.id.toString()}
+                                    </span>
+                                    {" left the server! "}
+                                    <span style={{ color: "red" }}>
+                                        {activity.event.timestamp}
+                                    </span>
+                                </li>
+                            );
+
+                            break;
+                        default:
+                            return <></>;
+
+                            break;
+                    }
                 })}
             </ul>
             <form onSubmit={handleSubmit}>

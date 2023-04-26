@@ -6,6 +6,7 @@ import { Output, OutputTypes } from "../types/output";
 import { Joined } from "../user/slice";
 import { Load, Posted, UserJoined, UserLeft } from "../feed/slice";
 import { serverUrl } from "../../app/hooks";
+import { message } from "../feed/actions";
 
 function createWebSocketChannel(ws: WebSocket) {
     return eventChannel<Output>((emit) => {
@@ -32,8 +33,9 @@ function* read(wsChannel: EventChannel<Output>) {
                 yield put(
                     Load({
                         users: output.payload.users,
-                        prevMessages: output.payload.messages,
-                        currMessages: [],
+                        activities: output.payload.messages.map((msg) =>
+                            message(msg)
+                        ),
                     })
                 );
                 break;

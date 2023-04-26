@@ -1,4 +1,4 @@
-import { Change, Message, User } from "./data";
+import { ActivityTimeStamp, Message, User } from "./data";
 
 export enum OutputTypes {
     Error = "Error",
@@ -33,12 +33,12 @@ export interface CurrentStateOutput {
 
 export interface UserJoinedOutput {
     type: OutputTypes.UserJoined;
-    payload: Change;
+    payload: ActivityTimeStamp;
 }
 
 export interface UserLeftOutput {
     type: OutputTypes.UserLeft;
-    payload: Change;
+    payload: ActivityTimeStamp;
 }
 
 export interface PostedOutput {
