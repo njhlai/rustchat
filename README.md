@@ -23,4 +23,4 @@ Then, run:
 ```sh
 npm run start
 ```
-Using any browser and navigate to <https://localhost:3000/>.
+Use any browser and navigate to <https://localhost:3000/>.
