@@ -1,0 +1,15 @@
+html {
+    height: 100vh;
+}
+
+body {
+    background-color: black;
+    color: ghostwhite;
+    height: 100vh;
+    margin: 0;
+}
+
+h1 {
+    margin: 0;
+    padding-left: 10px;
+}
