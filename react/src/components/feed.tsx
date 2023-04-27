@@ -1,39 +1,12 @@
 "use client";
 
-import { CSSProperties, ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { post } from "../api/user/actions";
 import { ActivityTypes } from "../api/types/data";
 
-const styles = {
-    chat: {
-        listStyle: "none",
-        paddingLeft: 10,
-        textAlign: "left",
-    },
-    id: {
-        color: "yellow",
-    },
-    name: {
-        color: "cyan",
-    },
-    myid: {
-        color: "orange",
-    },
-    myself: {
-        color: "green",
-    },
-    messageInput: {
-        textAlign: "left",
-        width: "98%",
-    },
-    timestamp: {
-        fontStyle: "italic",
-        float: "right",
-        color: "red",
-    },
-} as Record<string, CSSProperties>;
+import styles from "../styles/layout.module.css";
 
 export default function Feed({ username }: { username: string }) {
     const acitivities = useAppSelector((state) => state.feed.activities);
@@ -53,8 +26,8 @@ export default function Feed({ username }: { username: string }) {
     }
 
     return (
-        <>
-            <ul style={styles.chat}>
+        <div className={styles.feed}>
+            <ul className={styles.chat}>
                 {acitivities.map((activity) => {
                     switch (activity.type) {
                         case ActivityTypes.Load:
@@ -62,7 +35,7 @@ export default function Feed({ username }: { username: string }) {
                                 <li style={{ margin: 15, textAlign: "center" }}>
                                     {" "}
                                     Hello{" "}
-                                    <span style={styles.myself}>
+                                    <span className={styles.myself}>
                                         {username}
                                     </span>
                                     !
@@ -73,11 +46,11 @@ export default function Feed({ username }: { username: string }) {
                         case ActivityTypes.Message:
                             return (
                                 <li key={activity.event.id.toString()}>
-                                    <span style={styles.id}>
+                                    <span className={styles.id}>
                                         {activity.event.sender.toString()}
                                     </span>
                                     : {activity.event.body}{" "}
-                                    <span style={styles.timestamp}>
+                                    <span className={styles.timestamp}>
                                         {activity.event.timestamp}
                                     </span>
                                 </li>
@@ -93,7 +66,7 @@ export default function Feed({ username }: { username: string }) {
                                         fontStyle: "italic",
                                     }}
                                 >
-                                    <span style={styles.id}>
+                                    <span className={styles.id}>
                                         {activity.event.user.id.toString()}
                                     </span>
                                     {" joined the server @ "}
@@ -113,7 +86,7 @@ export default function Feed({ username }: { username: string }) {
                                         fontStyle: "italic",
                                     }}
                                 >
-                                    <span style={styles.id}>
+                                    <span className={styles.id}>
                                         {activity.event.user.id.toString()}
                                     </span>
                                     {" left the server! "}
@@ -133,13 +106,13 @@ export default function Feed({ username }: { username: string }) {
             </ul>
             <form onSubmit={handleSubmit}>
                 <input
-                    style={styles.messageInput}
+                    className={styles.message_input}
                     type="text"
                     placeholder="Enter your message"
                     onChange={handleChange}
                     value={message}
                 />
             </form>
-        </>
+        </div>
     );
 }

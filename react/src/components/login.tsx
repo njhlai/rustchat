@@ -1,23 +1,11 @@
 "use client";
 
-import { CSSProperties, ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 
 import { join } from "../api/user/actions";
 import { useAppDispatch } from "../app/hooks";
 
-const styles = {
-    joinButton: {},
-    login: {
-        display: "flex",
-        flexDirection: "column",
-        marginLeft: 10,
-        marginRight: 10,
-        textAlign: "inherit",
-    },
-    usernameInput: {
-        textAlign: "center",
-    },
-} as Record<string, CSSProperties>;
+import styles from "../styles/layout.module.css";
 
 export default function Login() {
     const [name, setName] = useState("");
@@ -39,20 +27,18 @@ export default function Login() {
     }
 
     return (
-        <>
+        <div className={styles.login}>
             <h3>Welcome!</h3>
-            <span style={styles.login}>
+            <span className={styles.login_form}>
                 <input
-                    className="login_input"
+                    className={styles.login_input}
                     type="text"
                     placeholder="username"
                     value={name}
                     onChange={handleNameChange}
                 />
-                <button style={styles.joinButton} onClick={handleJoin}>
-                    Join!
-                </button>
+                <button onClick={handleJoin}>Join!</button>
             </span>
-        </>
+        </div>
     );
 }

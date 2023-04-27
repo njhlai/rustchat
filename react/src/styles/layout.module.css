@@ -1,0 +1,89 @@
+.main {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    height: 100vh;
+}
+
+.container {
+    border-top-style: solid;
+    display: flex;
+    flex-direction: row;
+    height: 92%;
+    justify-content: stretch;
+}
+
+.login {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100%;
+    justify-content: center;
+    margin: auto;
+    text-align: center;
+}
+
+.login_form {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10;
+    margin-right: 10;
+    text-align: inherit;
+}
+
+.login_input {
+    text-align: inherit !important;
+}
+
+.feed {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100%;
+    justify-content: flex-end;
+    margin: auto;
+    text-align: center;
+}
+
+.chat {
+    list-style: none;
+    overflow: auto;
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: left;
+}
+
+.message_input {
+    text-align: left;
+    width: 98%;
+}
+
+.users {
+    border-right-style: solid;
+    margin: 0;
+    min-width: 20%;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.id {
+    color: yellow;
+}
+
+.name {
+    color: cyan;
+}
+
+.myid {
+    color: orange;
+}
+
+.myself {
+    color: green;
+}
+
+.timestamp {
+    color: red;
+    float: right;
+    font-style: italic;
+}
