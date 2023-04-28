@@ -1,6 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { Feed, Message, ActivityTimeStamp } from "../types/data";
-import { load, message, userjoin, userleft } from "./actions";
+import { load, message, userJoin, userLeft } from "./actions";
 
 const feedSlice = createSlice({
     name: "feed",
@@ -24,7 +24,7 @@ const feedSlice = createSlice({
             return {
                 ...state,
                 users: [...state.users, action.payload.user],
-                activities: [...state.activities, userjoin(action.payload)],
+                activities: [...state.activities, userJoin(action.payload)],
             };
         },
         UserLeft(state: Feed, action: PayloadAction<ActivityTimeStamp>) {
@@ -33,7 +33,7 @@ const feedSlice = createSlice({
                 users: state.users.filter(
                     (user) => user.id != action.payload.user.id
                 ),
-                activities: [...state.activities, userleft(action.payload)],
+                activities: [...state.activities, userLeft(action.payload)],
             };
         },
     },

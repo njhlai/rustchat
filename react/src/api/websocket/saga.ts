@@ -6,7 +6,7 @@ import { Output, OutputTypes } from "../types/output";
 import { Joined } from "../user/slice";
 import { Load, Posted, UserJoined, UserLeft } from "../feed/slice";
 import { serverUrl } from "../../app/hooks";
-import { message } from "../feed/actions";
+import { currentState } from "../feed/actions";
 
 function createWebSocketChannel(ws: WebSocket) {
     return eventChannel<Output>((emit) => {
@@ -30,14 +30,7 @@ function* read(wsChannel: EventChannel<Output>) {
                 console.log("Current state of server:", output.payload);
 
                 yield put(Joined(output.payload.myself));
-                yield put(
-                    Load({
-                        users: output.payload.users,
-                        activities: output.payload.messages.map((msg) =>
-                            message(msg)
-                        ),
-                    })
-                );
+                yield put(Load(currentState(output)));
                 break;
             case OutputTypes.Posted:
                 console.log(

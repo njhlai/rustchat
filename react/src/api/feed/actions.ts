@@ -1,4 +1,14 @@
-import { ActivityTimeStamp, ActivityTypes, LoadActivity, Message, MessageActivity, UserJoinedActivity, UserLeftActivity } from "../types/data";
+import { ActivityTimeStamp, ActivityTypes, Feed, LoadActivity, Message, MessageActivity, UserJoinedActivity, UserLeftActivity } from "../types/data";
+import { CurrentStateOutput } from "../types/output";
+
+export function currentState(output: CurrentStateOutput) {
+    return {
+        users: output.payload.users,
+        activities: output.payload.messages.map((msg) =>
+            message(msg)
+        ),
+    } as Feed;
+}
 
 export function load() {
     return {
@@ -13,14 +23,14 @@ export function message(msg: Message) {
     } as MessageActivity;
 }
 
-export function userjoin(activityTimeStamp: ActivityTimeStamp) {
+export function userJoin(activityTimeStamp: ActivityTimeStamp) {
     return {
         type: ActivityTypes.UserJoined,
         event: activityTimeStamp,
     } as UserJoinedActivity;
 }
 
-export function userleft(activityTimeStamp: ActivityTimeStamp) {
+export function userLeft(activityTimeStamp: ActivityTimeStamp) {
     return {
         type: ActivityTypes.UserLeft,
         event: activityTimeStamp,
