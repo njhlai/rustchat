@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use super::data::{Feed, Message, User};
 use super::input::{ClientInput, Input, Join, Post};
-use super::output::{CurrentState, Output, OutputErrors, Posted, UserJoined, UserLeft};
+use super::output::{CurrentState, Output, OutputErrors, Posted, UserActivityTimestamp};
 
 pub struct Hub {
     feed: RwLock<Feed>,
@@ -88,7 +88,7 @@ impl Hub {
                     )),
                 );
 
-                self.send_to_complement(client_id, &Output::UserJoined(UserJoined::new(user)));
+                self.send_to_complement(client_id, &Output::UserJoined(UserActivityTimestamp::new(user)));
             }
         };
     }
@@ -104,7 +104,7 @@ impl Hub {
                 }
                 x.remove();
 
-                self.send(&Output::UserLeft(UserLeft::new(user)));
+                self.send(&Output::UserLeft(UserActivityTimestamp::new(user)));
             }
             Entry::Vacant(_) => {
                 println!("WARN: Leaving user of client {client_id} does not exist in hub's user list, not doing anything");

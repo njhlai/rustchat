@@ -9,8 +9,8 @@ pub enum Output {
     Error(OutputErrors),
     Alive,
     CurrentState(CurrentState),
-    UserJoined(UserJoined),
-    UserLeft(UserLeft),
+    UserJoined(UserActivityTimestamp),
+    UserLeft(UserActivityTimestamp),
     Posted(Posted),
 }
 
@@ -33,26 +33,14 @@ impl CurrentState {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct UserJoined {
+pub struct UserActivityTimestamp {
     user: User,
     timestamp: DateTime<Utc>,
 }
 
-impl UserJoined {
+impl UserActivityTimestamp {
     pub fn new(user: User) -> Self {
-        UserJoined { user, timestamp: Utc::now() }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct UserLeft {
-    user: User,
-    timestamp: DateTime<Utc>,
-}
-
-impl UserLeft {
-    pub fn new(user: User) -> Self {
-        UserLeft { user, timestamp: Utc::now() }
+        UserActivityTimestamp { user, timestamp: Utc::now() }
     }
 }
 
