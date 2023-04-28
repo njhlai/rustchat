@@ -21,7 +21,7 @@ pub fn read(id: Uuid, ws_stream: SplitStream<WebSocket>) -> impl Stream<Item = R
                     Input::Error(InputErrors::InputParseError)
                 });
 
-                Ok(ClientInput { id, input })
+                Ok(ClientInput::new(id, input))
             }
             Err(err) => Err(err),
         })

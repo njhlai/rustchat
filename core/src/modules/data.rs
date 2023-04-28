@@ -4,16 +4,28 @@ use uuid::Uuid;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct User {
-    pub id: Uuid,
-    pub name: String,
+    id: Uuid,
+    name: String,
+}
+
+impl User {
+    pub fn new(id: Uuid, name: &str) -> Self {
+        User { id, name: String::from(name) }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Message {
-    pub id: Uuid,
-    pub sender: Uuid,
-    pub timestamp: DateTime<Utc>,
-    pub body: String,
+    id: Uuid,
+    sender: Uuid,
+    timestamp: DateTime<Utc>,
+    body: String,
+}
+
+impl Message {
+    pub fn new(id: Uuid, sender: Uuid, body: &str) -> Self {
+        Message { id, sender, timestamp: Utc::now(), body: String::from(body) }
+    }
 }
 
 #[derive(Default)]

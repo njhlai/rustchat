@@ -2,7 +2,6 @@ use std::collections::{hash_map::Entry, HashMap};
 use std::sync::mpsc::{sync_channel, Receiver, SyncSender};
 use std::sync::RwLock;
 
-use chrono::Utc;
 use futures_util::stream::StreamExt;
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio_stream::wrappers::UnboundedReceiverStream;
@@ -13,9 +12,9 @@ use super::input::{ClientInput, Input, Join, Post};
 use super::output::{CurrentState, Output, OutputErrors, Posted, UserJoined, UserLeft};
 
 pub struct Hub {
-    pub feed: RwLock<Feed>,
-    pub users: RwLock<HashMap<Uuid, User>>,
-    pub outpost: RwLock<HashMap<Uuid, SyncSender<Output>>>,
+    feed: RwLock<Feed>,
+    users: RwLock<HashMap<Uuid, User>>,
+    outpost: RwLock<HashMap<Uuid, SyncSender<Output>>>,
 }
 
 impl Hub {
@@ -77,19 +76,19 @@ impl Hub {
                 self.send_to_user(client_id, Output::Error(OutputErrors::UserAlreadyJoined));
             }
             Entry::Vacant(x) => {
-                let user = User { id: client_id, name: join.name.trim().to_string() };
+                let user = User::new(client_id, join.name.trim());
                 x.insert(user.clone());
 
                 self.send_to_user(
                     client_id,
-                    Output::CurrentState(CurrentState {
-                        myself: user.clone(),
-                        users: users.values().cloned().collect(),
-                        messages: self.feed.read().unwrap().clone(),
-                    }),
+                    Output::CurrentState(CurrentState::new(
+                        user.clone(),
+                        users.values().cloned().collect(),
+                        self.feed.read().unwrap().clone(),
+                    )),
                 );
 
-                self.send_to_complement(client_id, &Output::UserJoined(UserJoined { user, timestamp: Utc::now() }));
+                self.send_to_complement(client_id, &Output::UserJoined(UserJoined::new(user)));
             }
         };
     }
@@ -98,14 +97,14 @@ impl Hub {
         let mut users = self.users.write().unwrap();
         match users.entry(client_id) {
             Entry::Occupied(x) => {
-                let leaving_user = x.get().clone();
+                let user = x.get().clone();
                 {
                     let mut map = self.outpost.write().unwrap();
                     map.remove(&client_id);
                 }
                 x.remove();
 
-                self.send(&Output::UserLeft(UserLeft { user: leaving_user, timestamp: Utc::now() }));
+                self.send(&Output::UserLeft(UserLeft::new(user)));
             }
             Entry::Vacant(_) => {
                 println!("WARN: Leaving user of client {client_id} does not exist in hub's user list, not doing anything");
@@ -113,18 +112,18 @@ impl Hub {
         }
     }
 
-    fn process_post(&self, sender_id: Uuid, post: Post) {
-        let msg = Message { id: Uuid::new_v4(), sender: sender_id, timestamp: Utc::now(), body: post.body };
-        self.feed.write().unwrap().push(msg.clone());
+    fn process_post(&self, sender_id: Uuid, post: &Post) {
+        let message = Message::new(Uuid::new_v4(), sender_id, post.body.as_str());
+        self.feed.write().unwrap().push(message.clone());
 
-        self.send(&Output::Posted(Posted { message: msg }));
+        self.send(&Output::Posted(Posted::new(message)));
     }
 
     async fn process(&self, client_input: ClientInput) {
         match client_input.input {
             Input::Join(join) => self.process_joined(client_input.id, &join),
             Input::Leave => self.process_left(client_input.id),
-            Input::Post(post) => self.process_post(client_input.id, post),
+            Input::Post(post) => self.process_post(client_input.id, &post),
             Input::Error(_) => (),
         };
     }

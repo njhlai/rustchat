@@ -7,6 +7,12 @@ pub struct ClientInput {
     pub input: Input,
 }
 
+impl ClientInput {
+    pub fn new(id: Uuid, input: Input) -> Self {
+        ClientInput { id, input }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", content = "payload")]
 pub enum Input {

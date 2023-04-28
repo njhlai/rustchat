@@ -21,24 +21,48 @@ pub enum OutputErrors {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct CurrentState {
-    pub myself: User,
-    pub users: Vec<User>,
-    pub messages: Vec<Message>,
+    myself: User,
+    users: Vec<User>,
+    messages: Vec<Message>,
+}
+
+impl CurrentState {
+    pub fn new(myself: User, users: Vec<User>, messages: Vec<Message>) -> Self {
+        CurrentState { myself, users, messages }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct UserJoined {
-    pub user: User,
-    pub timestamp: DateTime<Utc>,
+    user: User,
+    timestamp: DateTime<Utc>,
+}
+
+impl UserJoined {
+    pub fn new(user: User) -> Self {
+        UserJoined { user, timestamp: Utc::now() }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct UserLeft {
-    pub user: User,
-    pub timestamp: DateTime<Utc>,
+    user: User,
+    timestamp: DateTime<Utc>,
+}
+
+impl UserLeft {
+    pub fn new(user: User) -> Self {
+        UserLeft { user, timestamp: Utc::now() }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Posted {
-    pub message: Message,
+    message: Message,
+}
+
+impl Posted {
+    pub fn new(message: Message) -> Self {
+        Posted { message }
+    }
 }
